@@ -256,4 +256,19 @@ CFD_RAW=$(service_block cloudflared "$RAW")
 assert_contains "$CFD_RAW" 'TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:?' \
   "the tunnel token is sourced from CLOUDFLARE_TUNNEL_TOKEN and required"
 
+# cloudflare-ddns is opt-in. Its profile hides it from the rendered config, so
+# the checks that it is off by default run against $CONFIG and the checks on its
+# shape run against $RAW. Its variables must NOT carry a `:?` guard: Compose
+# interpolates inactive profiles too, so a guard would break every deployment
+# that does not use DDNS.
+assert_not_contains "$CONFIG" "cloudflare-ddns" \
+  "cloudflare-ddns is not started without --profile ddns"
+DDNS=$(service_block cloudflare-ddns "$RAW")
+assert_contains "$DDNS" "profiles: [ddns]" "cloudflare-ddns is opt-in via the ddns profile"
+assert_contains "$DDNS" "favonia/cloudflare-ddns:1.18.0" "cloudflare-ddns uses a pinned image"
+assert_contains "$DDNS" "PROXIED=false" "cloudflare-ddns records are DNS-only"
+assert_contains "$DDNS" 'DOMAINS=${DDNS_DOMAINS:-}' "the DDNS hostnames come from DDNS_DOMAINS"
+assert_not_contains "$DDNS" ":?" "cloudflare-ddns has no required-variable guard"
+assert_not_contains "$DDNS" "ports:" "cloudflare-ddns declares no ports"
+
 finish

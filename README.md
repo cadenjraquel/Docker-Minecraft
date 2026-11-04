@@ -65,7 +65,7 @@ so it is reached directly via a plain DNS record.
    current `.env`.
 
 2. **Optionally set up backups.** The `backup` service is **opt-in**: it declares
-   `profiles: [backup]`, so the command in step 4 does not start it. Create
+   `profiles: [backup]`, so the command in step 5 does not start it. Create
    `backup.config` from `backup.config.example`, then:
 
    ```bash
@@ -89,7 +89,14 @@ so it is reached directly via a plain DNS record.
    `config.yml` with ingress rules would be silently ignored. That is fine here, because
    Caddy handles all routing, so the dashboard needs only the single hostname above.
 
-4. **Start it:**
+4. **Optionally keep the game record current.** The `cloudflare-ddns` service is
+   **opt-in** (`profiles: [ddns]`), for hosts without a static IP. Set
+   `CLOUDFLARE_API_TOKEN` (scopes `Zone > DNS > Edit` and `Zone > Zone > Read`) and
+   `DDNS_DOMAINS` (e.g. `mc.example.org`) in `.env`. It maintains a DNS-only `A` record,
+   which replaces the manual record in step 3. Then start with
+   `docker compose --profile ddns up -d`.
+
+5. **Start it:**
 
    ```bash
    docker compose up -d

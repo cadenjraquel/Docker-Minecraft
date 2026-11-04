@@ -254,6 +254,34 @@ services:
     depends_on:
       - caddy
 
+  # Keeps the DNS A record for the game hostname pointed at this host's public
+  # IP, for deployments without a static address. Minecraft cannot go through
+  # the tunnel, so mc.<domain> is a plain record that must follow the host.
+  #
+  # OPT-IN, like backup: it needs a Cloudflare API token and a hostname, and a
+  # bare `up -d` should not start something that cannot work yet. Start it with:
+  #   docker compose --profile ddns up -d
+  #
+  # The two variables default to empty rather than `:?`-required because
+  # Compose interpolates inactive profiles too, so a required guard here would
+  # break every deployment that does not use DDNS.
+  cloudflare-ddns:
+    profiles: [ddns]
+    image: favonia/cloudflare-ddns:1.18.0
+    container_name: cloudflare-ddns
+    restart: unless-stopped
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [all]
+    security_opt: [no-new-privileges:true]
+    environment:
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN:-}
+      - DOMAINS=${DDNS_DOMAINS:-}
+      # DNS-only: Cloudflare cannot proxy Minecraft traffic.
+      - PROXIED=false
+      - IP4_PROVIDER=cloudflare.trace
+      - IP6_PROVIDER=none
+
   # Proxy for Minecraft servers
   velocity:
     build:
