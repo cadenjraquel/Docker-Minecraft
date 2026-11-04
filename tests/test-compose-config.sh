@@ -239,7 +239,7 @@ assert_contains "$MCHPRS_CFG" "user: 1000:1000" \
 CFD=$(service_block cloudflared "$CONFIG")
 # Assert the pinned image rather than the bare word "cloudflared", which
 # would also match the container name and prove nothing about the image.
-assert_contains "$CFD" "cloudflare/cloudflared:2026.9.1" "cloudflared uses a pinned image"
+assert_contains "$CFD" "cloudflare/cloudflared:2026.10.5" "cloudflared uses a pinned image"
 assert_not_contains "$CFD" "ports:" "cloudflared declares no ports"
 
 # The token wiring is asserted against $RAW, not $CONFIG. Rendering
